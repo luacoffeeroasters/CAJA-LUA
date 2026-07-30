@@ -86,6 +86,8 @@
 
   .new-mesa-row{ display:flex; gap:8px; margin-top:12px; }
   .quick-btn{ width:auto; padding:8px 14px; font-size:0.76rem; background:var(--cream-2); }
+  .mesas-pager{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .mesas-pager .btn-back{ margin:0; padding:6px 10px; }
 
   /* Accordion menu */
   .accordion-item{ border:2px solid var(--line-strong); border-radius:14px; margin-bottom:8px; overflow:hidden; }
@@ -130,6 +132,11 @@
   .tag.efectivo{ background:rgba(92,138,82,0.18); color:var(--sage); }
   .tag.tarjeta{ background:rgba(193,80,46,0.18); color:var(--terracotta-dark); }
   .tag.transferencia{ background:rgba(35,29,23,0.1); color:var(--ink-soft); }
+
+  .metodo-edit{
+    width:auto; margin-bottom:0; padding:3px 8px; font-size:0.62rem; font-weight:700;
+    border-radius:20px; text-transform:uppercase; border:none; background:rgba(35,29,23,0.1); color:var(--ink-soft);
+  }
 
   .sale-ticket{ padding:11px 0; border-bottom:1px dashed var(--line-strong); font-size:0.83rem; }
   .sale-ticket:last-child{ border-bottom:none; }
@@ -227,6 +234,11 @@
         <h2>Mesas</h2>
         <div id="mesasEmptyMsg" class="empty" style="display:none;">Abre la caja para usar las mesas</div>
         <div class="mesas-grid" id="mesasGrid"></div>
+        <div class="mesas-pager" id="mesasPager" style="display:none;">
+          <button class="btn-ghost btn-back" id="btnMesaPrev">← Anterior</button>
+          <span class="mono" id="mesasPageLabel">1/1</span>
+          <button class="btn-ghost btn-back" id="btnMesaNext">Siguiente →</button>
+        </div>
         <div class="new-mesa-row">
           <button class="quick-btn" id="btnAgregarMesa">+ Agregar mesa</button>
         </div>
@@ -268,6 +280,14 @@
             <div class="label">Total</div>
             <div class="value" id="cartTotal">$0</div>
           </div>
+          <div id="vueltoBox" style="display:none;">
+            <label>Recibido (efectivo)</label>
+            <input id="recibidoInput" type="number" inputmode="decimal" placeholder="Monto con el que paga el cliente">
+            <div class="total-line" style="padding-top:0;">
+              <div class="label">Vuelto a devolver</div>
+              <div class="value" id="vueltoValue">$0</div>
+            </div>
+          </div>
           <button class="btn-primary" id="btnCobrar">Cobrar y cerrar mesa</button>
           <button class="btn-danger" id="btnCancelarPedido" style="margin-top:10px;">Cancelar pedido</button>
         </div>
@@ -280,8 +300,12 @@
 
       <div class="card">
         <h2>Cierre de caja</h2>
-        <label>Efectivo contado al cierre</label>
+        <label>Efectivo contado</label>
         <input id="cierreEfectivo" type="number" inputmode="decimal" placeholder="Cuenta el efectivo real en caja">
+        <label>Tarjeta (datáfono) contado</label>
+        <input id="cierreTarjeta" type="number" inputmode="decimal" placeholder="Total que reporta el datáfono">
+        <label>Transferencias contado</label>
+        <input id="cierreTransferencia" type="number" inputmode="decimal" placeholder="Total recibido por transferencia">
         <label>Notas (opcional)</label>
         <input id="cierreNotas" placeholder="Ej: faltante por vuelto mal dado">
         <button class="btn-primary" id="btnCerrar">Cerrar caja</button>
@@ -376,6 +400,8 @@
   let pedidoActivoId = null;
   let metodoActual = 'efectivo';
   let catExpandida = null;
+  let mesaPage = 0;
+  const MESAS_PAGE_SIZE = 6;
 
   const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CO');
   function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
@@ -393,6 +419,8 @@
   document.getElementById('btnExport').addEventListener('click', exportarHistorial);
   document.getElementById('btnReset').addEventListener('click', resetearTodo);
   document.getElementById('btnAgregarMesa').addEventListener('click', agregarMesaConfig);
+  document.getElementById('btnMesaPrev').addEventListener('click', ()=>{ mesaPage--; renderMesas(); });
+  document.getElementById('btnMesaNext').addEventListener('click', ()=>{ mesaPage++; renderMesas(); });
   document.getElementById('btnVolverMesas').addEventListener('click', ()=>{ pedidoActivoId = null; render(); });
   document.getElementById('mesSelect').addEventListener('change', renderMesResumen);
   document.getElementById('methodRow').addEventListener('click', (e)=>{
@@ -400,7 +428,24 @@
     if(!btn) return;
     metodoActual = btn.dataset.metodo;
     document.querySelectorAll('.method-btn').forEach(b=>b.classList.toggle('active', b===btn));
+    renderVuelto();
   });
+  document.getElementById('recibidoInput').addEventListener('input', renderVuelto);
+
+  function renderVuelto(){
+    const box = document.getElementById('vueltoBox');
+    if(metodoActual !== 'efectivo'){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    const p = pedidoActivo();
+    const total = p ? pedidoTotal(p) : 0;
+    const recibido = parseFloat(document.getElementById('recibidoInput').value);
+    const valueEl = document.getElementById('vueltoValue');
+    if(isNaN(recibido)){ valueEl.textContent = '$0'; valueEl.classList.remove('diff-bad'); return; }
+    const vuelto = recibido - total;
+    valueEl.textContent = fmt(Math.abs(vuelto));
+    valueEl.classList.toggle('diff-bad', vuelto < 0);
+    if(vuelto < 0) valueEl.textContent = 'Falta ' + fmt(Math.abs(vuelto));
+  }
 
   function abrirCaja(){
     const responsable = document.getElementById('aperturaResponsable').value.trim();
@@ -447,9 +492,17 @@
   function renderMesas(){
     const grid = document.getElementById('mesasGrid');
     const emptyMsg = document.getElementById('mesasEmptyMsg');
-    if(!state.sesionActual){ emptyMsg.style.display='block'; grid.innerHTML=''; return; }
+    const pager = document.getElementById('mesasPager');
+    if(!state.sesionActual){ emptyMsg.style.display='block'; grid.innerHTML=''; pager.style.display='none'; return; }
     emptyMsg.style.display='none';
-    grid.innerHTML = mesasConfig.map(label => {
+
+    const totalPages = Math.max(1, Math.ceil(mesasConfig.length / MESAS_PAGE_SIZE));
+    if(mesaPage >= totalPages) mesaPage = totalPages - 1;
+    if(mesaPage < 0) mesaPage = 0;
+    const start = mesaPage * MESAS_PAGE_SIZE;
+    const pageLabels = mesasConfig.slice(start, start + MESAS_PAGE_SIZE);
+
+    grid.innerHTML = pageLabels.map(label => {
       const p = pedidoPorLabel(label);
       const ocupada = !!p;
       const total = ocupada ? p.items.reduce((s,i)=>s+i.price*i.qty,0) : 0;
@@ -463,6 +516,15 @@
     grid.querySelectorAll('.mesa-tile').forEach(t=>{
       t.addEventListener('click', ()=> tocarMesa(t.dataset.label));
     });
+
+    if(totalPages > 1){
+      pager.style.display = 'flex';
+      document.getElementById('mesasPageLabel').textContent = `${mesaPage+1} / ${totalPages}`;
+      document.getElementById('btnMesaPrev').disabled = mesaPage === 0;
+      document.getElementById('btnMesaNext').disabled = mesaPage === totalPages - 1;
+    } else {
+      pager.style.display = 'none';
+    }
   }
 
   function pedidoActivo(){
@@ -553,6 +615,7 @@
       </div>
     `).join('');
     document.getElementById('cartTotal').textContent = fmt(pedidoTotal(p));
+    renderVuelto();
   }
 
   function cobrarPedido(){
@@ -569,6 +632,7 @@
     state.sesionActual.pedidosAbiertos = state.sesionActual.pedidosAbiertos.filter(x => x.id !== p.id);
     pedidoActivoId = null;
     metodoActual = 'efectivo';
+    document.getElementById('recibidoInput').value = '';
     saveState();
     render();
   }
@@ -590,6 +654,16 @@
     render();
   }
   window.eliminarVentaTicket = eliminarVentaTicket;
+
+  function cambiarMetodoVenta(id, nuevoMetodo){
+    if(!state.sesionActual) return;
+    const v = state.sesionActual.ventas.find(v => v.id === id);
+    if(!v) return;
+    v.metodo = nuevoMetodo;
+    saveState();
+    render();
+  }
+  window.cambiarMetodoVenta = cambiarMetodoVenta;
 
   function totales(){
     const ventas = state.sesionActual ? state.sesionActual.ventas : [];
@@ -617,12 +691,22 @@
       if(!confirm(`Tienes ${state.sesionActual.pedidosAbiertos.length} mesa(s) abiertas sin cobrar. Si cierras la caja se perderán de este corte. ¿Continuar?`)) return;
     }
     const efectivoContado = parseFloat(document.getElementById('cierreEfectivo').value);
+    const tarjetaContado = parseFloat(document.getElementById('cierreTarjeta').value);
+    const transferenciaContado = parseFloat(document.getElementById('cierreTransferencia').value);
     if(isNaN(efectivoContado) || efectivoContado < 0){ alert('Ingresa el efectivo contado.'); return; }
+    if(isNaN(tarjetaContado) || tarjetaContado < 0){ alert('Ingresa el total de tarjeta contado.'); return; }
+    if(isNaN(transferenciaContado) || transferenciaContado < 0){ alert('Ingresa el total de transferencias contado.'); return; }
     const notas = document.getElementById('cierreNotas').value.trim();
     const { porMetodo, total } = totales();
     const ventas = state.sesionActual.ventas;
     const efectivoEsperado = state.sesionActual.fondoInicial + porMetodo.efectivo;
-    const diferencia = efectivoContado - efectivoEsperado;
+    const tarjetaEsperado = porMetodo.tarjeta;
+    const transferenciaEsperado = porMetodo.transferencia;
+    const diferencias = {
+      efectivo: efectivoContado - efectivoEsperado,
+      tarjeta: tarjetaContado - tarjetaEsperado,
+      transferencia: transferenciaContado - transferenciaEsperado
+    };
     const productos = productosVendidos(ventas);
 
     const cierre = {
@@ -631,7 +715,12 @@
       horaCierre: new Date().toISOString(),
       fondoInicial: state.sesionActual.fondoInicial,
       ventas, totalVentas: total, porMetodo,
-      efectivoEsperado, efectivoContado, diferencia, notas, productos
+      esperado: { efectivo: efectivoEsperado, tarjeta: tarjetaEsperado, transferencia: transferenciaEsperado },
+      contado: { efectivo: efectivoContado, tarjeta: tarjetaContado, transferencia: transferenciaContado },
+      diferencias,
+      diferencia: diferencias.efectivo, // compatibilidad con cierres antiguos
+      efectivoEsperado, efectivoContado,
+      notas, productos
     };
     state.historial.unshift(cierre);
     state.sesionActual = null;
@@ -639,14 +728,18 @@
     saveState();
 
     document.getElementById('cierreEfectivo').value = '';
+    document.getElementById('cierreTarjeta').value = '';
+    document.getElementById('cierreTransferencia').value = '';
     document.getElementById('cierreNotas').value = '';
     document.getElementById('aperturaResponsable').value = '';
     document.getElementById('aperturaFondo').value = '';
 
     render();
-    alert(diferencia === 0 ? 'Caja cerrada. Cuadre exacto.'
-      : diferencia > 0 ? `Caja cerrada. Sobrante de ${fmt(diferencia)}.`
-      : `Caja cerrada. Faltante de ${fmt(Math.abs(diferencia))}.`);
+    const resumenDiff = (label,d) => d === 0 ? `${label}: cuadre exacto` : (d > 0 ? `${label}: sobrante ${fmt(d)}` : `${label}: faltante ${fmt(Math.abs(d))}`);
+    alert('Caja cerrada.\n' +
+      resumenDiff('Efectivo', diferencias.efectivo) + '\n' +
+      resumenDiff('Tarjeta', diferencias.tarjeta) + '\n' +
+      resumenDiff('Transferencia', diferencias.transferencia));
   }
 
   function exportarHistorial(){
@@ -759,7 +852,11 @@
               <div>
                 <span class="mono" style="font-size:0.7rem; color:var(--ink-soft);">${new Date(v.hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</span>
                 <span style="font-weight:700; margin-left:6px; font-size:0.78rem;">${escapeHtml(v.label||'')}</span>
-                <span class="tag ${v.metodo}" style="margin-left:6px;">${v.metodo}</span>
+                <select class="metodo-edit mono" data-id="${v.id}" style="margin-left:6px;">
+                  <option value="efectivo" ${v.metodo==='efectivo'?'selected':''}>Efectivo</option>
+                  <option value="tarjeta" ${v.metodo==='tarjeta'?'selected':''}>Tarjeta</option>
+                  <option value="transferencia" ${v.metodo==='transferencia'?'selected':''}>Transferencia</option>
+                </select>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <div class="mono" style="font-weight:700;">${fmt(v.total)}</div>
@@ -769,6 +866,9 @@
             <div class="items">${v.items.map(i=>`${i.qty}× ${escapeHtml(i.name)}`).join(' · ')}</div>
           </div>
         `).join('');
+        list.querySelectorAll('.metodo-edit').forEach(sel=>{
+          sel.addEventListener('change', ()=> cambiarMetodoVenta(parseInt(sel.dataset.id), sel.value));
+        });
       }
     }
 
@@ -777,15 +877,27 @@
       hist.innerHTML = '<div class="empty">Sin cierres registrados todavía</div>';
     } else {
       hist.innerHTML = state.historial.map(c => {
-        const diffClass = c.diferencia === 0 ? '' : (c.diferencia > 0 ? 'diff-ok' : 'diff-bad');
-        const diffLabel = c.diferencia === 0 ? 'Cuadre exacto' : (c.diferencia > 0 ? `Sobrante ${fmt(c.diferencia)}` : `Faltante ${fmt(Math.abs(c.diferencia))}`);
         const top5 = (c.productos || []).slice(0,5);
+        let diffHtml;
+        if(c.diferencias){
+          const linea = (label,d) => {
+            const cls = d === 0 ? '' : (d > 0 ? 'diff-ok' : 'diff-bad');
+            const txt = d === 0 ? 'Cuadre exacto' : (d > 0 ? `Sobrante ${fmt(d)}` : `Faltante ${fmt(Math.abs(d))}`);
+            return `<div class="${cls}">${label}: ${txt}</div>`;
+          };
+          diffHtml = linea('Efectivo', c.diferencias.efectivo) + linea('Tarjeta', c.diferencias.tarjeta) + linea('Transferencia', c.diferencias.transferencia);
+        } else {
+          const d = c.diferencia;
+          const cls = d === 0 ? '' : (d > 0 ? 'diff-ok' : 'diff-bad');
+          const txt = d === 0 ? 'Cuadre exacto' : (d > 0 ? `Sobrante ${fmt(d)}` : `Faltante ${fmt(Math.abs(d))}`);
+          diffHtml = `<div class="${cls}">${txt}</div>`;
+        }
         return `
           <div class="history-entry">
             <div class="date">${new Date(c.horaCierre).toLocaleDateString('es-CO',{dateStyle:'long'})}</div>
             <div>Responsable: ${escapeHtml(c.responsable)} · ${c.ventas.length} ventas</div>
             <div>Total: ${fmt(c.totalVentas)} — Efectivo: ${fmt(c.porMetodo.efectivo)} · Tarjeta: ${fmt(c.porMetodo.tarjeta)} · Transf.: ${fmt(c.porMetodo.transferencia)}</div>
-            <div class="${diffClass}">${diffLabel}</div>
+            ${diffHtml}
             ${c.notas ? `<div style="color:var(--ink-soft); font-size:0.72rem; margin-top:2px;">Nota: ${escapeHtml(c.notas)}</div>` : ''}
             ${top5.length ? `
               <div style="margin-top:10px;">
