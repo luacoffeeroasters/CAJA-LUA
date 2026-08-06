@@ -38,7 +38,7 @@
   .status-dot.open{ background:var(--sage); }
   .status-dot.closed{ background:var(--terracotta); }
 
-  main{ max-width:560px; margin:0 auto; padding:14px; }
+  main{ max-width:1100px; margin:0 auto; padding:14px; }
   .apertura-wrap{ max-width:520px; margin:0 auto; padding:14px; }
 
   .card{ background:var(--cream); border:2px solid var(--ink); border-radius:18px; padding:18px; margin-bottom:14px; }
@@ -67,27 +67,48 @@
   .btn-ghost{ background:transparent; }
   .btn-danger{ background:transparent; border-color:var(--terracotta-dark); color:var(--terracotta-dark); }
   .btn-back{ width:auto; padding:8px 14px; font-size:0.76rem; background:transparent; margin-bottom:12px; }
+  .quick-btn{ width:auto; padding:9px 16px; font-size:0.78rem; background:var(--cream-2); }
 
   .empty{ text-align:center; color:var(--ink-soft); opacity:0.6; font-size:0.85rem; padding:16px 0; }
 
-  /* Mesitas: floor-plan style tiles */
-  .mesas-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-  .mesa-tile{
-    border:2px solid var(--line-strong); border-radius:14px; padding:14px 8px; text-align:center;
-    background:var(--cream-2); cursor:pointer; min-height:76px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  /* ---- Top-level tabs: Mesas / Resumen ---- */
+  .tab-nav{ display:flex; gap:10px; margin-bottom:16px; }
+  .tab-btn{
+    flex:1; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem;
+    padding:13px; border-radius:14px; border:2px solid var(--ink); background:var(--cream-2); color:var(--ink);
   }
-  .mesa-tile:hover{ border-color:var(--terracotta); }
+  .tab-btn.active{ background:var(--ink); color:var(--cream); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  /* ---- Mesas: big floor-plan tiles ---- */
+  .mesas-grid-full{
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:14px;
+  }
+  @media (min-width:600px){ .mesas-grid-full{ grid-template-columns:repeat(3, 1fr); } }
+  @media (min-width:880px){ .mesas-grid-full{ grid-template-columns:repeat(4, 1fr); } }
+  .mesa-tile{
+    border:2px solid var(--line-strong); border-radius:18px; padding:22px 10px; text-align:center;
+    background:var(--cream-2); cursor:pointer; min-height:110px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px;
+  }
+  .mesa-tile:hover{ border-color:var(--terracotta); transform:translateY(-1px); }
   .mesa-tile.ocupada{ background:var(--terracotta); border-color:var(--terracotta); }
   .mesa-tile.ocupada .m-label, .mesa-tile.ocupada .m-total{ color:var(--cream); }
-  .mesa-tile .m-label{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.85rem; line-height:1.2; }
-  .mesa-tile .m-total{ font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--terracotta-dark); font-weight:700; }
-  .mesa-tile.agregar{ border-style:dashed; color:var(--terracotta); font-size:1.4rem; font-weight:800; background:transparent; }
+  .mesa-tile .m-icon{ font-size:1.4rem; }
+  .mesa-tile .m-label{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1rem; line-height:1.2; }
+  .mesa-tile .m-total{ font-family:'Space Mono',monospace; font-size:0.75rem; color:var(--terracotta-dark); font-weight:700; }
 
-  .new-mesa-row{ display:flex; gap:8px; margin-top:12px; }
-  .quick-btn{ width:auto; padding:8px 14px; font-size:0.76rem; background:var(--cream-2); }
-  .mesas-pager{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
-  .mesas-pager .btn-back{ margin:0; padding:6px 10px; }
+  .mesas-pager{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
+  .mesas-pager .btn-back{ margin:0; padding:8px 12px; }
+  .mesas-footer-row{ margin-top:16px; }
+
+  /* ---- Pedido detail (menu + cuenta) ---- */
+  .pedido-columns{ display:flex; flex-direction:column; gap:16px; }
+  @media (min-width:880px){ .pedido-columns{ flex-direction:row; align-items:flex-start; } }
+  .pedido-menu{ flex:1.3; min-width:0; }
+  .pedido-cuenta{ flex:1; min-width:0; }
+  @media (min-width:880px){ .pedido-cuenta{ position:sticky; top:96px; } }
 
   /* Accordion menu */
   .accordion-item{ border:2px solid var(--line-strong); border-radius:14px; margin-bottom:8px; overflow:hidden; }
@@ -100,6 +121,7 @@
   .accordion-head.open .chev{ transform:rotate(180deg); }
   .accordion-body{ padding:12px; display:none; }
   .accordion-body.open{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  @media (min-width:520px){ .accordion-body.open{ grid-template-columns:1fr 1fr 1fr; } }
 
   .prod-btn{
     text-align:left; border:2px solid var(--line-strong); border-radius:12px; padding:10px;
@@ -124,15 +146,16 @@
   .method-btn:hover{ border-color:var(--terracotta); }
   .method-btn.active{ background:var(--terracotta); border-color:var(--terracotta); color:var(--cream); }
 
-  .total-line{ display:flex; justify-content:space-between; align-items:baseline; padding:12px 0 4px; font-family:'Baloo 2',sans-serif; }
+  .total-line{ display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; font-family:'Baloo 2',sans-serif; }
+  .total-line.sm{ font-family:'Quicksand',sans-serif; font-weight:600; padding:4px 0; font-size:0.85rem; color:var(--ink-soft); }
   .total-line .label{ font-size:0.82rem; color:var(--ink-soft); }
   .total-line .value{ font-size:1.4rem; color:var(--terracotta); }
+  .total-line.sm .value{ font-size:0.9rem; color:var(--ink); font-family:'Space Mono',monospace; }
 
   .tag{ display:inline-block; font-size:0.6rem; font-weight:700; letter-spacing:0.04em; padding:2px 8px; border-radius:20px; text-transform:uppercase; font-family:'Space Mono',monospace; }
   .tag.efectivo{ background:rgba(92,138,82,0.18); color:var(--sage); }
   .tag.tarjeta{ background:rgba(193,80,46,0.18); color:var(--terracotta-dark); }
   .tag.transferencia{ background:rgba(35,29,23,0.1); color:var(--ink-soft); }
-
   .metodo-edit{
     width:auto; margin-bottom:0; padding:3px 8px; font-size:0.62rem; font-weight:700;
     border-radius:20px; text-transform:uppercase; border:none; background:rgba(35,29,23,0.1); color:var(--ink-soft);
@@ -161,37 +184,20 @@
   .history-entry:last-child{ border-bottom:none; }
   .history-entry .date{ color:var(--terracotta); font-weight:700; margin-bottom:4px; font-family:'Baloo 2',sans-serif; }
 
-  /* Monthly summary table */
   .month-select-row{ display:flex; gap:10px; align-items:center; margin-bottom:12px; }
   .month-select-row select{ margin-bottom:0; }
-  .month-row{
-    display:flex; justify-content:space-between; align-items:center; padding:9px 0;
-    border-bottom:1px dashed var(--line-strong); font-size:0.85rem;
-  }
+  .month-row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed var(--line-strong); font-size:0.85rem; }
   .month-row:last-child{ border-bottom:none; }
   .month-row .d{ font-weight:700; }
   .month-row .v{ font-family:'Space Mono',monospace; font-weight:700; }
-  .month-total{
-    display:flex; justify-content:space-between; align-items:baseline; margin-top:10px; padding-top:12px;
-    border-top:2px solid var(--ink); font-family:'Baloo 2',sans-serif;
-  }
+  .month-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:10px; padding-top:12px; border-top:2px solid var(--ink); font-family:'Baloo 2',sans-serif; }
   .month-total .label{ font-size:0.85rem; color:var(--ink-soft); }
   .month-total .value{ font-size:1.3rem; color:var(--terracotta); }
 
-  footer{ text-align:center; font-size:0.63rem; color:var(--ink-soft); opacity:0.5; letter-spacing:0.08em; text-transform:uppercase; margin-top:20px; }
+  .resumen-grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:880px){ .resumen-grid{ grid-template-columns:1fr 1fr; } }
 
-  @media (min-width: 880px){
-    main{ max-width:1220px; padding:20px; }
-    .apertura-wrap{ max-width:520px; }
-    #cajaAbiertaWrap{ display:grid; grid-template-columns: 320px minmax(0,1fr) 340px; gap:18px; align-items:start; }
-    .col-left, .col-right{ display:flex; flex-direction:column; gap:14px; }
-    .col-right{ position:sticky; top:96px; }
-    .card{ padding:20px; }
-    .mesas-grid{ grid-template-columns:1fr 1fr; }
-  }
-  @media (min-width: 880px){
-    .siempre-visible{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  }
+  footer{ text-align:center; font-size:0.63rem; color:var(--ink-soft); opacity:0.5; letter-spacing:0.08em; text-transform:uppercase; margin-top:20px; }
 </style>
 </head>
 <body>
@@ -219,120 +225,143 @@
 <main>
   <div id="cajaAbiertaWrap" style="display:none;">
 
-    <div class="col-left">
-      <div class="card">
-        <h2>Estado actual</h2>
-        <div class="totals-grid">
-          <div class="box"><div class="label">Fondo inicial</div><div class="value" id="viewFondo">$0</div></div>
-          <div class="box"><div class="label">Ventas de hoy</div><div class="value" id="viewTotalVentas">$0</div></div>
-          <div class="box"><div class="label">Efectivo esperado</div><div class="value" id="viewEfectivoEsperado">$0</div></div>
-          <div class="box"><div class="label">N.º de ventas</div><div class="value" id="viewNumVentas">0</div></div>
-        </div>
-      </div>
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tabBtnMesas">🍽️ Mesas</button>
+      <button class="tab-btn" id="tabBtnResumen">📊 Resumen y caja</button>
+    </div>
 
-      <div class="card">
-        <h2>Mesas</h2>
-        <div id="mesasEmptyMsg" class="empty" style="display:none;">Abre la caja para usar las mesas</div>
-        <div class="mesas-grid" id="mesasGrid"></div>
+    <!-- ============ TAB MESAS ============ -->
+    <div class="tab-panel active" id="tabMesas">
+
+      <div id="vistaMesasGrid">
+        <div class="mesas-grid-full" id="mesasGridFull"></div>
         <div class="mesas-pager" id="mesasPager" style="display:none;">
           <button class="btn-ghost btn-back" id="btnMesaPrev">← Anterior</button>
           <span class="mono" id="mesasPageLabel">1/1</span>
           <button class="btn-ghost btn-back" id="btnMesaNext">Siguiente →</button>
         </div>
-        <div class="new-mesa-row">
+        <div class="mesas-footer-row">
           <button class="quick-btn" id="btnAgregarMesa">+ Agregar mesa</button>
         </div>
       </div>
+
+      <div id="vistaPedido" style="display:none;">
+        <button class="btn-back" id="btnVolverMesas">← Todas las mesas</button>
+        <h2 style="margin-bottom:16px;">Pedido: <span id="pedidoActivoLabel" style="color:var(--ink);">—</span></h2>
+
+        <div class="pedido-columns">
+          <div class="pedido-menu">
+            <div class="card">
+              <h2>Menú</h2>
+              <div id="accordionMenu"></div>
+            </div>
+            <div class="card">
+              <h2>Producto especial / fuera de carta</h2>
+              <label>¿Qué pidió?</label>
+              <input id="otroDesc" placeholder="Ej: Espresso doble con hielo aparte">
+              <label>Precio</label>
+              <input id="otroPrecio" type="number" inputmode="decimal" placeholder="0">
+              <button class="btn-ghost" id="btnAgregarOtro">Agregar al pedido</button>
+            </div>
+          </div>
+
+          <div class="pedido-cuenta">
+            <div class="card">
+              <h2>Cuenta del pedido</h2>
+              <div id="cartList"><div class="empty">Sin productos agregados aún</div></div>
+
+              <div id="cartFooter" style="display:none; margin-top:6px;">
+                <label style="margin-top:6px;">Descuento (%)</label>
+                <input id="descuentoInput" type="number" min="0" max="100" inputmode="decimal" placeholder="Ej: 10">
+
+                <div id="subtotalLine" class="total-line sm" style="display:none;">
+                  <div class="label">Subtotal</div><div class="value" id="subtotalValue">$0</div>
+                </div>
+                <div id="descuentoLine" class="total-line sm" style="display:none;">
+                  <div class="label">Descuento</div><div class="value" id="descuentoValue">-$0</div>
+                </div>
+
+                <div class="method-row" id="methodRow">
+                  <button class="method-btn active" data-metodo="efectivo">Efectivo</button>
+                  <button class="method-btn" data-metodo="tarjeta">Tarjeta</button>
+                  <button class="method-btn" data-metodo="transferencia">Transferencia</button>
+                </div>
+                <div class="total-line">
+                  <div class="label">Total a cobrar</div>
+                  <div class="value" id="cartTotal">$0</div>
+                </div>
+                <div id="vueltoBox" style="display:none;">
+                  <label>Recibido (efectivo)</label>
+                  <input id="recibidoInput" type="number" inputmode="decimal" placeholder="Monto con el que paga el cliente">
+                  <div class="total-line" style="padding-top:0;">
+                    <div class="label">Vuelto a devolver</div>
+                    <div class="value" id="vueltoValue">$0</div>
+                  </div>
+                </div>
+                <button class="btn-primary" id="btnCobrar">Cobrar y cerrar mesa</button>
+                <button class="btn-danger" id="btnCancelarPedido" style="margin-top:10px;">Cancelar pedido</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="col-center">
-      <div class="card">
-        <div id="sinPedidoMsg" class="empty">Toca una mesa a la izquierda para abrirla y empezar a agregar productos.</div>
-
-        <div id="pedidoContent" style="display:none;">
-          <button class="btn-back" id="btnVolverMesas">← Volver a mesas</button>
-          <h2>Pedido: <span id="pedidoActivoLabel" style="color:var(--ink);">—</span></h2>
-          <div id="accordionMenu"></div>
-
-          <div style="margin-top:16px;">
-            <label>Otro producto</label>
-            <div class="row">
-              <input id="otroDesc" placeholder="Descripción">
-              <input id="otroPrecio" type="number" inputmode="decimal" placeholder="Precio">
+    <!-- ============ TAB RESUMEN ============ -->
+    <div class="tab-panel" id="tabResumen">
+      <div class="resumen-grid">
+        <div>
+          <div class="card">
+            <h2>Estado actual</h2>
+            <div class="totals-grid">
+              <div class="box"><div class="label">Fondo inicial</div><div class="value" id="viewFondo">$0</div></div>
+              <div class="box"><div class="label">Ventas de hoy</div><div class="value" id="viewTotalVentas">$0</div></div>
+              <div class="box"><div class="label">Efectivo esperado</div><div class="value" id="viewEfectivoEsperado">$0</div></div>
+              <div class="box"><div class="label">N.º de ventas</div><div class="value" id="viewNumVentas">0</div></div>
             </div>
-            <button class="btn-ghost" id="btnAgregarOtro">Agregar al pedido</button>
+          </div>
+
+          <div class="card">
+            <h2>Ventas de hoy <span id="ventaCount" class="mono count"></span></h2>
+            <div id="ventasList"><div class="empty">Aún no hay ventas registradas</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Cierre de caja</h2>
+            <label>Efectivo contado</label>
+            <input id="cierreEfectivo" type="number" inputmode="decimal" placeholder="Cuenta el efectivo real en caja">
+            <label>Tarjeta (datáfono) contado</label>
+            <input id="cierreTarjeta" type="number" inputmode="decimal" placeholder="Total que reporta el datáfono">
+            <label>Transferencias contado</label>
+            <input id="cierreTransferencia" type="number" inputmode="decimal" placeholder="Total recibido por transferencia">
+            <label>Notas (opcional)</label>
+            <input id="cierreNotas" placeholder="Ej: faltante por vuelto mal dado">
+            <button class="btn-primary" id="btnCerrar">Cerrar caja</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <h2>Ventas del mes</h2>
+            <div class="month-select-row"><select id="mesSelect"></select></div>
+            <div id="mesResumen"><div class="empty">Aún no hay cierres registrados</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Historial de cierres</h2>
+            <div id="historialList"><div class="empty">Sin cierres registrados todavía</div></div>
+          </div>
+
+          <div class="card">
+            <h2>Datos</h2>
+            <button class="btn-ghost" id="btnExport" style="margin-bottom:10px;">Exportar historial (JSON)</button>
+            <button class="btn-danger" id="btnReset">Borrar todos los datos</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="col-right">
-      <div class="card">
-        <h2>Cuenta del pedido</h2>
-        <div id="cartList"><div class="empty">Sin productos agregados aún</div></div>
-        <div id="cartFooter" style="display:none; margin-top:10px;">
-          <div class="method-row" id="methodRow">
-            <button class="method-btn active" data-metodo="efectivo">Efectivo</button>
-            <button class="method-btn" data-metodo="tarjeta">Tarjeta</button>
-            <button class="method-btn" data-metodo="transferencia">Transferencia</button>
-          </div>
-          <div class="total-line">
-            <div class="label">Total</div>
-            <div class="value" id="cartTotal">$0</div>
-          </div>
-          <div id="vueltoBox" style="display:none;">
-            <label>Recibido (efectivo)</label>
-            <input id="recibidoInput" type="number" inputmode="decimal" placeholder="Monto con el que paga el cliente">
-            <div class="total-line" style="padding-top:0;">
-              <div class="label">Vuelto a devolver</div>
-              <div class="value" id="vueltoValue">$0</div>
-            </div>
-          </div>
-          <button class="btn-primary" id="btnCobrar">Cobrar y cerrar mesa</button>
-          <button class="btn-danger" id="btnCancelarPedido" style="margin-top:10px;">Cancelar pedido</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Ventas de hoy <span id="ventaCount" class="mono count"></span></h2>
-        <div id="ventasList"><div class="empty">Aún no hay ventas registradas</div></div>
-      </div>
-
-      <div class="card">
-        <h2>Cierre de caja</h2>
-        <label>Efectivo contado</label>
-        <input id="cierreEfectivo" type="number" inputmode="decimal" placeholder="Cuenta el efectivo real en caja">
-        <label>Tarjeta (datáfono) contado</label>
-        <input id="cierreTarjeta" type="number" inputmode="decimal" placeholder="Total que reporta el datáfono">
-        <label>Transferencias contado</label>
-        <input id="cierreTransferencia" type="number" inputmode="decimal" placeholder="Total recibido por transferencia">
-        <label>Notas (opcional)</label>
-        <input id="cierreNotas" placeholder="Ej: faltante por vuelto mal dado">
-        <button class="btn-primary" id="btnCerrar">Cerrar caja</button>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="siempre-visible">
-    <div class="card">
-      <h2>Ventas del mes</h2>
-      <div class="month-select-row">
-        <select id="mesSelect"></select>
-      </div>
-      <div id="mesResumen"><div class="empty">Aún no hay cierres registrados</div></div>
-    </div>
-
-    <div class="card">
-      <h2>Historial de cierres</h2>
-      <div id="historialList"><div class="empty">Sin cierres registrados todavía</div></div>
-    </div>
-
-    <div class="card">
-      <h2>Datos</h2>
-      <button class="btn-ghost" id="btnExport" style="margin-bottom:10px;">Exportar historial (JSON)</button>
-      <button class="btn-danger" id="btnReset">Borrar todos los datos</button>
-    </div>
   </div>
 </main>
 
@@ -345,8 +374,8 @@
 
   const CATALOGO = [
     { cat:'Calientes', items:[
-      ['Espresso',8000],['Americano',9000],['Macchiato',10000],['Capuccino',12000],
-      ['Latte',13000],['Mocachino',16000],['Campesino',12000],['Cortado (flat white)',14000],
+      ['Espresso',8000],['Americano',9000],['Macchiato',10000],['Cappuccino',12000],
+      ['Latte',13000],['Mocachino',16000],['Campesino',12000],['Cortado / Flat White',14000],
       ['Chai Latte',14000],['Dirty Chai Latte',17000],['Chocolate',13500],['Infusiones',14000],
       ['Café Irlandés',19000],['Ube Latte',13500]
     ]},
@@ -354,23 +383,22 @@
       ['Espresso tónica',19000],['Espresso naranja',18000],['Espresso ginger',19000],
       ['Ice Latte',14000],['Ice Chai Latte',15000],['Ice Dirty Chai',18000],
       ['Ice Chocolate',13000],['Ice Mocachino',17000],['Ube Latte Ice',15000],['Ube Ice',13500],
-      ['Cold Brew',15000]
+      ['Cold Brew',15000],['Cold Brew Edward',20000]
     ]},
-    { cat:'Especial', items:[ ['Cold Brew Edward',20000] ]},
-    { cat:'Sodas', items:[ ['Soda naranja',16000],['Soda de frutos rojos',18000],['Soda de maracuyá',17000] ]},
+    { cat:'Sodas', items:[ ['Soda naranja',16000],['Soda frutos rojos',18000],['Soda maracuyá',17000] ]},
     { cat:'Jugos', items:[
       ['Fresa (agua)',13000],['Fresa (leche)',13500],
       ['Mango (agua)',13000],['Mango (leche)',13500],
       ['Maracuyá (agua)',13000],['Maracuyá (leche)',13500]
     ]},
-    { cat:'Aguas', items:[ ['Agua con gas',4000],['Agua sin gas',4000],['Cerveza',13000] ]},
+    { cat:'Aguas y cervezas', items:[ ['Agua con gas',4000],['Agua sin gas',4000],['Cerveza',14000] ]},
     { cat:'Filtrados', items:[ ['Variedades exóticas',22000],['Micro lotes',28000] ]},
     { cat:'Extras', items:[ ['Bebida vegetal',4000],['Syrup',5000] ]},
     { cat:'Croissants salados', items:[ ['Cuarto Creciente',20000],['Luna Verde',27500] ]},
-    { cat:'Tostadas', items:[ ['Tostada Eclipse',29000],['Luna Llena',22000] ]},
-    { cat:'Waffles salados', items:[ ['Wafle Marea Alta',29900] ]},
-    { cat:'Croissants dulces', items:[ ['Selene',14000],['Medianoche',14000],['Crateroso',14000] ]},
-    { cat:'Waffles dulces', items:[ ['Wafles Fase Oscura',19500],['Órbita',27900] ]},
+    { cat:'Tostada masa madre', items:[ ['Tostada Eclipse',29000],['Luna Llena',22000] ]},
+    { cat:'Waffles salados', items:[ ['Marea Alta',29900] ]},
+    { cat:'Croissants dulces', items:[ ['Selene',14000],['Crateroso',14000],['Almendra',14000] ]},
+    { cat:'Bowl', items:[ ['Órbita Bowl',27900] ]},
     { cat:'Torta', items:[ ['Nova (zanahoria)',15000],['Lado Oscuro (chocolate)',15000],['Satélite (almojábana)',15000] ]},
     { cat:'Para llevar', items:[ ['Bolsa de grano 250g',32000],['Bolsa de grano 500g',58000] ]}
   ];
@@ -381,6 +409,9 @@
       if(!raw) return { sesionActual:null, historial:[] };
       const s = JSON.parse(raw);
       if(s.sesionActual && !s.sesionActual.pedidosAbiertos) s.sesionActual.pedidosAbiertos = [];
+      if(s.sesionActual){
+        s.sesionActual.pedidosAbiertos.forEach(p => { if(p.descuentoPct === undefined) p.descuentoPct = 0; });
+      }
       return s;
     }catch(e){ return { sesionActual:null, historial:[] }; }
   }
@@ -401,7 +432,7 @@
   let metodoActual = 'efectivo';
   let catExpandida = null;
   let mesaPage = 0;
-  const MESAS_PAGE_SIZE = 6;
+  const MESAS_PAGE_SIZE = 8;
 
   const fmt = (n) => '$' + Math.round(n).toLocaleString('es-CO');
   function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
@@ -423,6 +454,10 @@
   document.getElementById('btnMesaNext').addEventListener('click', ()=>{ mesaPage++; renderMesas(); });
   document.getElementById('btnVolverMesas').addEventListener('click', ()=>{ pedidoActivoId = null; render(); });
   document.getElementById('mesSelect').addEventListener('change', renderMesResumen);
+  document.getElementById('descuentoInput').addEventListener('input', onDescuentoChange);
+  document.getElementById('recibidoInput').addEventListener('input', renderVuelto);
+  document.getElementById('tabBtnMesas').addEventListener('click', ()=> switchTab('mesas'));
+  document.getElementById('tabBtnResumen').addEventListener('click', ()=> switchTab('resumen'));
   document.getElementById('methodRow').addEventListener('click', (e)=>{
     const btn = e.target.closest('.method-btn');
     if(!btn) return;
@@ -430,21 +465,12 @@
     document.querySelectorAll('.method-btn').forEach(b=>b.classList.toggle('active', b===btn));
     renderVuelto();
   });
-  document.getElementById('recibidoInput').addEventListener('input', renderVuelto);
 
-  function renderVuelto(){
-    const box = document.getElementById('vueltoBox');
-    if(metodoActual !== 'efectivo'){ box.style.display = 'none'; return; }
-    box.style.display = 'block';
-    const p = pedidoActivo();
-    const total = p ? pedidoTotal(p) : 0;
-    const recibido = parseFloat(document.getElementById('recibidoInput').value);
-    const valueEl = document.getElementById('vueltoValue');
-    if(isNaN(recibido)){ valueEl.textContent = '$0'; valueEl.classList.remove('diff-bad'); return; }
-    const vuelto = recibido - total;
-    valueEl.textContent = fmt(Math.abs(vuelto));
-    valueEl.classList.toggle('diff-bad', vuelto < 0);
-    if(vuelto < 0) valueEl.textContent = 'Falta ' + fmt(Math.abs(vuelto));
+  function switchTab(tab){
+    document.getElementById('tabBtnMesas').classList.toggle('active', tab==='mesas');
+    document.getElementById('tabBtnResumen').classList.toggle('active', tab==='resumen');
+    document.getElementById('tabMesas').classList.toggle('active', tab==='mesas');
+    document.getElementById('tabResumen').classList.toggle('active', tab==='resumen');
   }
 
   function abrirCaja(){
@@ -480,21 +506,20 @@
     if(!state.sesionActual) return;
     let p = pedidoPorLabel(label);
     if(!p){
-      p = { id: Date.now(), label, items: [], creado: new Date().toISOString() };
+      p = { id: Date.now(), label, items: [], descuentoPct: 0, creado: new Date().toISOString() };
       state.sesionActual.pedidosAbiertos.push(p);
       saveState();
     }
     pedidoActivoId = p.id;
     catExpandida = null;
+    metodoActual = 'efectivo';
     render();
   }
 
   function renderMesas(){
-    const grid = document.getElementById('mesasGrid');
-    const emptyMsg = document.getElementById('mesasEmptyMsg');
+    const grid = document.getElementById('mesasGridFull');
     const pager = document.getElementById('mesasPager');
-    if(!state.sesionActual){ emptyMsg.style.display='block'; grid.innerHTML=''; pager.style.display='none'; return; }
-    emptyMsg.style.display='none';
+    if(!state.sesionActual){ grid.innerHTML=''; pager.style.display='none'; return; }
 
     const totalPages = Math.max(1, Math.ceil(mesasConfig.length / MESAS_PAGE_SIZE));
     if(mesaPage >= totalPages) mesaPage = totalPages - 1;
@@ -508,6 +533,7 @@
       const total = ocupada ? p.items.reduce((s,i)=>s+i.price*i.qty,0) : 0;
       return `
         <div class="mesa-tile ${ocupada?'ocupada':''}" data-label="${escapeHtml(label)}">
+          <div class="m-icon">${ocupada ? '☕' : '·'}</div>
           <div class="m-label">${escapeHtml(label)}</div>
           ${ocupada ? `<div class="m-total">${fmt(total)}</div>` : `<div class="m-total" style="opacity:0.5;">libre</div>`}
         </div>
@@ -531,7 +557,12 @@
     if(!state.sesionActual) return null;
     return state.sesionActual.pedidosAbiertos.find(p => p.id === pedidoActivoId) || null;
   }
-  function pedidoTotal(p){ return p.items.reduce((s,i)=> s + i.price*i.qty, 0); }
+  function pedidoSubtotal(p){ return p.items.reduce((s,i)=> s + i.price*i.qty, 0); }
+  function pedidoTotalConDescuento(p){
+    const sub = pedidoSubtotal(p);
+    const pct = p.descuentoPct || 0;
+    return sub - (sub * pct / 100);
+  }
 
   // ---------------- ACORDEON MENU ----------------
   function renderAccordion(){
@@ -568,7 +599,6 @@
     const existing = p.items.find(i => i.name === name && i.price === price);
     if(existing){ existing.qty += 1; } else { p.items.push({name, price, qty:1}); }
     saveState();
-    renderMesas();
     renderCart();
   }
   function agregarOtro(){
@@ -585,12 +615,22 @@
     p.items[idx].qty += delta;
     if(p.items[idx].qty <= 0) p.items.splice(idx,1);
     saveState();
-    renderMesas();
     renderCart();
   }
   window.changeQty = changeQty;
 
-  function renderCart(){
+  function onDescuentoChange(){
+    const p = pedidoActivo();
+    if(!p) return;
+    let pct = parseFloat(document.getElementById('descuentoInput').value);
+    if(isNaN(pct) || pct < 0) pct = 0;
+    if(pct > 100) pct = 100;
+    p.descuentoPct = pct;
+    saveState();
+    renderCart(true);
+  }
+
+  function renderCart(skipInputSync){
     const p = pedidoActivo();
     const list = document.getElementById('cartList');
     const footer = document.getElementById('cartFooter');
@@ -614,18 +654,61 @@
         <div class="cart-sub">${fmt(i.price*i.qty)}</div>
       </div>
     `).join('');
-    document.getElementById('cartTotal').textContent = fmt(pedidoTotal(p));
+
+    if(!skipInputSync){
+      document.getElementById('descuentoInput').value = p.descuentoPct || '';
+    }
+
+    const sub = pedidoSubtotal(p);
+    const pct = p.descuentoPct || 0;
+    const descuentoMonto = sub * pct / 100;
+    const total = sub - descuentoMonto;
+
+    const subtotalLine = document.getElementById('subtotalLine');
+    const descuentoLine = document.getElementById('descuentoLine');
+    if(pct > 0){
+      subtotalLine.style.display = 'flex';
+      descuentoLine.style.display = 'flex';
+      document.getElementById('subtotalValue').textContent = fmt(sub);
+      document.getElementById('descuentoValue').textContent = '-' + fmt(descuentoMonto) + ` (${pct}%)`;
+    } else {
+      subtotalLine.style.display = 'none';
+      descuentoLine.style.display = 'none';
+    }
+
+    document.getElementById('cartTotal').textContent = fmt(total);
     renderVuelto();
+  }
+
+  function renderVuelto(){
+    const box = document.getElementById('vueltoBox');
+    if(metodoActual !== 'efectivo'){ box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    const p = pedidoActivo();
+    const total = p ? pedidoTotalConDescuento(p) : 0;
+    const recibido = parseFloat(document.getElementById('recibidoInput').value);
+    const valueEl = document.getElementById('vueltoValue');
+    if(isNaN(recibido)){ valueEl.textContent = '$0'; valueEl.classList.remove('diff-bad'); return; }
+    const vuelto = recibido - total;
+    valueEl.classList.toggle('diff-bad', vuelto < 0);
+    valueEl.textContent = vuelto < 0 ? ('Falta ' + fmt(Math.abs(vuelto))) : fmt(vuelto);
   }
 
   function cobrarPedido(){
     const p = pedidoActivo();
     if(!p || p.items.length === 0) return;
+    const sub = pedidoSubtotal(p);
+    const pct = p.descuentoPct || 0;
+    const descuentoMonto = sub * pct / 100;
+    const total = sub - descuentoMonto;
     state.sesionActual.ventas.push({
       id: Date.now(),
       label: p.label,
       items: p.items.map(i => ({name:i.name, price:i.price, qty:i.qty})),
-      total: pedidoTotal(p),
+      subtotal: sub,
+      descuentoPct: pct,
+      descuentoMonto: descuentoMonto,
+      total: total,
       metodo: metodoActual,
       hora: new Date().toISOString()
     });
@@ -718,7 +801,7 @@
       esperado: { efectivo: efectivoEsperado, tarjeta: tarjetaEsperado, transferencia: transferenciaEsperado },
       contado: { efectivo: efectivoContado, tarjeta: tarjetaContado, transferencia: transferenciaContado },
       diferencias,
-      diferencia: diferencias.efectivo, // compatibilidad con cierres antiguos
+      diferencia: diferencias.efectivo,
       efectivoEsperado, efectivoContado,
       notas, productos
     };
@@ -760,14 +843,11 @@
     render();
   }
 
-  // ---------------- VENTAS DEL MES (acumulado día a día) ----------------
   const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
   function monthKey(dateStr){
     const d = new Date(dateStr);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
   }
-
   function renderMesSelect(){
     const sel = document.getElementById('mesSelect');
     const keys = Array.from(new Set(state.historial.map(c => monthKey(c.horaCierre))));
@@ -781,7 +861,6 @@
     }).join('');
     if(keys.includes(prevValue)) sel.value = prevValue;
   }
-
   function renderMesResumen(){
     const sel = document.getElementById('mesSelect');
     const key = sel.value;
@@ -799,77 +878,71 @@
     });
     const dias = Object.keys(porDia);
     const totalMes = dias.reduce((s,d)=> s + porDia[d], 0);
-    wrap.innerHTML = dias.map(d => `
-      <div class="month-row"><div class="d">${d}</div><div class="v">${fmt(porDia[d])}</div></div>
-    `).join('') + `
-      <div class="month-total"><div class="label">Total del mes</div><div class="value">${fmt(totalMes)}</div></div>
-    `;
+    wrap.innerHTML = dias.map(d => `<div class="month-row"><div class="d">${d}</div><div class="v">${fmt(porDia[d])}</div></div>`).join('')
+      + `<div class="month-total"><div class="label">Total del mes</div><div class="value">${fmt(totalMes)}</div></div>`;
   }
 
   // ---------- RENDER ----------
   function render(){
     const abierta = !!state.sesionActual;
     aperturaWrap.style.display = abierta ? 'none' : 'block';
-    cajaAbiertaWrap.style.display = abierta ? (window.innerWidth < 880 ? 'block' : 'grid') : 'none';
+    cajaAbiertaWrap.style.display = abierta ? 'block' : 'none';
     statusDot.className = 'status-dot ' + (abierta ? 'open' : 'closed');
     statusLabel.textContent = abierta ? 'Caja abierta' : 'Caja cerrada';
 
-    renderMesas();
+    if(!abierta) return;
 
-    if(abierta){
-      const p = pedidoActivo();
-      const sinPedidoMsg = document.getElementById('sinPedidoMsg');
-      const pedidoContent = document.getElementById('pedidoContent');
-      const labelEl = document.getElementById('pedidoActivoLabel');
-      if(p){
-        sinPedidoMsg.style.display = 'none';
-        pedidoContent.style.display = 'block';
-        labelEl.textContent = p.label;
-        renderAccordion();
-        renderCart();
-      } else {
-        sinPedidoMsg.style.display = 'block';
-        pedidoContent.style.display = 'none';
-        labelEl.textContent = '—';
-      }
+    const p = pedidoActivo();
+    const vistaMesas = document.getElementById('vistaMesasGrid');
+    const vistaPedido = document.getElementById('vistaPedido');
+    if(p){
+      vistaMesas.style.display = 'none';
+      vistaPedido.style.display = 'block';
+      document.getElementById('pedidoActivoLabel').textContent = p.label;
+      renderAccordion();
+      renderCart();
+    } else {
+      vistaMesas.style.display = 'block';
+      vistaPedido.style.display = 'none';
+      renderMesas();
+    }
 
-      const { porMetodo, total } = totales();
-      const efectivoEsperado = state.sesionActual.fondoInicial + porMetodo.efectivo;
-      document.getElementById('viewFondo').textContent = fmt(state.sesionActual.fondoInicial);
-      document.getElementById('viewTotalVentas').textContent = fmt(total);
-      document.getElementById('viewEfectivoEsperado').textContent = fmt(efectivoEsperado);
-      document.getElementById('viewNumVentas').textContent = state.sesionActual.ventas.length;
+    const { porMetodo, total } = totales();
+    const efectivoEsperado = state.sesionActual.fondoInicial + porMetodo.efectivo;
+    document.getElementById('viewFondo').textContent = fmt(state.sesionActual.fondoInicial);
+    document.getElementById('viewTotalVentas').textContent = fmt(total);
+    document.getElementById('viewEfectivoEsperado').textContent = fmt(efectivoEsperado);
+    document.getElementById('viewNumVentas').textContent = state.sesionActual.ventas.length;
 
-      const list = document.getElementById('ventasList');
-      const ventas = state.sesionActual.ventas;
-      document.getElementById('ventaCount').textContent = ventas.length ? `(${ventas.length})` : '';
-      if(ventas.length === 0){
-        list.innerHTML = '<div class="empty">Aún no hay ventas registradas</div>';
-      } else {
-        list.innerHTML = ventas.slice().reverse().map(v => `
-          <div class="sale-ticket">
-            <div class="top">
-              <div>
-                <span class="mono" style="font-size:0.7rem; color:var(--ink-soft);">${new Date(v.hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</span>
-                <span style="font-weight:700; margin-left:6px; font-size:0.78rem;">${escapeHtml(v.label||'')}</span>
-                <select class="metodo-edit mono" data-id="${v.id}" style="margin-left:6px;">
-                  <option value="efectivo" ${v.metodo==='efectivo'?'selected':''}>Efectivo</option>
-                  <option value="tarjeta" ${v.metodo==='tarjeta'?'selected':''}>Tarjeta</option>
-                  <option value="transferencia" ${v.metodo==='transferencia'?'selected':''}>Transferencia</option>
-                </select>
-              </div>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <div class="mono" style="font-weight:700;">${fmt(v.total)}</div>
-                <button class="del" onclick="eliminarVentaTicket(${v.id})">✕</button>
-              </div>
+    const list = document.getElementById('ventasList');
+    const ventas = state.sesionActual.ventas;
+    document.getElementById('ventaCount').textContent = ventas.length ? `(${ventas.length})` : '';
+    if(ventas.length === 0){
+      list.innerHTML = '<div class="empty">Aún no hay ventas registradas</div>';
+    } else {
+      list.innerHTML = ventas.slice().reverse().map(v => `
+        <div class="sale-ticket">
+          <div class="top">
+            <div>
+              <span class="mono" style="font-size:0.7rem; color:var(--ink-soft);">${new Date(v.hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</span>
+              <span style="font-weight:700; margin-left:6px; font-size:0.78rem;">${escapeHtml(v.label||'')}</span>
+              <select class="metodo-edit mono" data-id="${v.id}" style="margin-left:6px;">
+                <option value="efectivo" ${v.metodo==='efectivo'?'selected':''}>Efectivo</option>
+                <option value="tarjeta" ${v.metodo==='tarjeta'?'selected':''}>Tarjeta</option>
+                <option value="transferencia" ${v.metodo==='transferencia'?'selected':''}>Transferencia</option>
+              </select>
             </div>
-            <div class="items">${v.items.map(i=>`${i.qty}× ${escapeHtml(i.name)}`).join(' · ')}</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div class="mono" style="font-weight:700;">${fmt(v.total)}</div>
+              <button class="del" onclick="eliminarVentaTicket(${v.id})">✕</button>
+            </div>
           </div>
-        `).join('');
-        list.querySelectorAll('.metodo-edit').forEach(sel=>{
-          sel.addEventListener('change', ()=> cambiarMetodoVenta(parseInt(sel.dataset.id), sel.value));
-        });
-      }
+          <div class="items">${v.items.map(i=>`${i.qty}× ${escapeHtml(i.name)}`).join(' · ')}${v.descuentoPct ? ` · <span style="color:var(--terracotta-dark);">-${v.descuentoPct}% desc.</span>` : ''}</div>
+        </div>
+      `).join('');
+      list.querySelectorAll('.metodo-edit').forEach(sel=>{
+        sel.addEventListener('change', ()=> cambiarMetodoVenta(parseInt(sel.dataset.id), sel.value));
+      });
     }
 
     const hist = document.getElementById('historialList');
@@ -918,12 +991,6 @@
     renderMesSelect();
     renderMesResumen();
   }
-
-  window.addEventListener('resize', ()=>{
-    if(state.sesionActual){
-      cajaAbiertaWrap.style.display = window.innerWidth < 880 ? 'block' : 'grid';
-    }
-  });
 
   render();
 })();
