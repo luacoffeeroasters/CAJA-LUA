@@ -373,34 +373,45 @@
   const MESAS_KEY = 'lua_mesas_config';
 
   const CATALOGO = [
-    { cat:'Calientes', items:[
-      ['Espresso',8000],['Americano',9000],['Macchiato',10000],['Cappuccino',12000],
-      ['Latte',13000],['Mocachino',16000],['Campesino',12000],['Cortado / Flat White',14000],
+    { cat:'Bebidas calientes', items:[
+      ['Espresso',8000],['Americano',9000],['Macchiato',10000],['Capuccino',12000],
+      ['Latte',13000],['Mocachino',16000],['Campesino',12000],['Cortado (flat white)',14000],
       ['Chai Latte',14000],['Dirty Chai Latte',17000],['Chocolate',13500],['Infusiones',14000],
-      ['Café Irlandés',19000],['Ube Latte',13500]
+      ['Café Irlandés',19000]
     ]},
-    { cat:'Frías', items:[
+    { cat:'Bebidas frías', items:[
       ['Espresso tónica',19000],['Espresso naranja',18000],['Espresso ginger',19000],
       ['Ice Latte',14000],['Ice Chai Latte',15000],['Ice Dirty Chai',18000],
-      ['Ice Chocolate',13000],['Ice Mocachino',17000],['Ube Latte Ice',15000],['Ube Ice',13500],
-      ['Cold Brew',15000],['Cold Brew Edward',20000]
+      ['Ice Chocolate',13000],['Ice Mocachino',17000],['Cold Brew',15000]
     ]},
-    { cat:'Sodas', items:[ ['Soda naranja',16000],['Soda frutos rojos',18000],['Soda maracuyá',17000] ]},
-    { cat:'Jugos', items:[
-      ['Fresa (agua)',13000],['Fresa (leche)',13500],
-      ['Mango (agua)',13000],['Mango (leche)',13500],
-      ['Maracuyá (agua)',13000],['Maracuyá (leche)',13500]
+    { cat:'Cold Brew especial', items:[
+      ['Cold Brew Edward',20000],['Cold Brew Maracuyá',20000]
     ]},
-    { cat:'Aguas y cervezas', items:[ ['Agua con gas',4000],['Agua sin gas',4000],['Cerveza',14000] ]},
+    { cat:'Sodas', items:[ ['Soda de frutos rojos',18000],['Soda de maracuyá',17000] ]},
+    { cat:'Jugos naturales', items:[
+      ['Jugo natural (agua)',13000],['Jugo natural (leche)',13500]
+    ]},
     { cat:'Filtrados', items:[ ['Variedades exóticas',22000],['Micro lotes',28000] ]},
     { cat:'Extras', items:[ ['Bebida vegetal',4000],['Syrup',5000] ]},
-    { cat:'Croissants salados', items:[ ['Cuarto Creciente',20000],['Luna Verde',27500] ]},
-    { cat:'Tostada masa madre', items:[ ['Tostada Eclipse',29000],['Luna Llena',22000] ]},
-    { cat:'Waffles salados', items:[ ['Marea Alta',29900] ]},
-    { cat:'Croissants dulces', items:[ ['Selene',14000],['Crateroso',14000],['Almendra',14000] ]},
-    { cat:'Bowl', items:[ ['Órbita Bowl',27900] ]},
-    { cat:'Torta', items:[ ['Nova (zanahoria)',15000],['Lado Oscuro (chocolate)',15000],['Satélite (almojábana)',15000] ]},
-    { cat:'Para llevar', items:[ ['Bolsa de grano 250g',32000],['Bolsa de grano 500g',58000] ]}
+    { cat:'Brunch de fin de semana', items:[
+      ['Brunch Astronauta',23500],['Brunch Lunares',39500]
+    ]},
+    { cat:'Croissants salados', items:[ ['Cuarto Creciente',18000],['Luna Verde',22500] ]},
+    { cat:'Tostada de pan masa madre', items:[
+      ['Tostada Eclipse',27800],['Luna Llena',20500],['Tostada Verde',24000]
+    ]},
+    { cat:'Omelets', items:[ ['Jamón y queso',18500],['Champiñón y queso',18500] ]},
+    { cat:'Waffles salados', items:[ ['Wafle Marea Alta',20500] ]},
+    { cat:'Sándwiches en brioche', items:[ ['Pollo caprese',29900],['Carne mechada',30500] ]},
+    { cat:'Croissants dulces', items:[ ['Croissant dulce (preguntar sabor)',12500] ]},
+    { cat:'Bowl', items:[ ['Órbita Bowl',18000] ]},
+    { cat:'Repostería', items:[ ['Postre del día (preguntar)',15000] ]},
+    { cat:'Panadería', items:[
+      ['Pan de bono',2500],['Dedos de queso cheddar',10500],['Galletas',9500]
+    ]},
+    { cat:'Bebidas embotelladas', items:[
+      ['Bretaña',6000],['Hatsu',8000],['Cerveza',9000],['Agua con gas',4000],['Agua sin gas',4000]
+    ]}
   ];
 
   function loadState(){
