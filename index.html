@@ -281,7 +281,18 @@
                   <div class="label">Descuento</div><div class="value" id="descuentoValue">-$0</div>
                 </div>
 
-                <div class="method-row" id="methodRow">
+                <label style="margin-top:10px;">Propina</label>
+                <div class="method-row" id="propinaRow">
+                  <button type="button" class="method-btn active" data-propina="0">0%</button>
+                  <button type="button" class="method-btn" data-propina="10">10%</button>
+                  <button type="button" class="method-btn" data-propina="15">15%</button>
+                  <button type="button" class="method-btn" data-propina="20">20%</button>
+                </div>
+                <div id="propinaLine" class="total-line sm" style="display:none;">
+                  <div class="label">Propina</div><div class="value" id="propinaValue">+$0</div>
+                </div>
+
+                <div class="method-row" id="methodRow" style="margin-top:10px;">
                   <button class="method-btn active" data-metodo="efectivo">Efectivo</button>
                   <button class="method-btn" data-metodo="tarjeta">Tarjeta</button>
                   <button class="method-btn" data-metodo="transferencia">Transferencia</button>
@@ -319,6 +330,7 @@
               <div class="box"><div class="label">Ventas de hoy</div><div class="value" id="viewTotalVentas">$0</div></div>
               <div class="box"><div class="label">Efectivo esperado</div><div class="value" id="viewEfectivoEsperado">$0</div></div>
               <div class="box"><div class="label">N.º de ventas</div><div class="value" id="viewNumVentas">0</div></div>
+              <div class="box"><div class="label">Propinas de hoy</div><div class="value" id="viewPropinas">$0</div></div>
             </div>
           </div>
 
@@ -467,6 +479,15 @@
   document.getElementById('mesSelect').addEventListener('change', renderMesResumen);
   document.getElementById('descuentoInput').addEventListener('input', onDescuentoChange);
   document.getElementById('recibidoInput').addEventListener('input', renderVuelto);
+  document.getElementById('propinaRow').addEventListener('click', e => {
+    const btn = e.target.closest('[data-propina]');
+    if(!btn) return;
+    const p = pedidoActivo();
+    if(!p) return;
+    p.propinaPct = parseInt(btn.dataset.propina, 10);
+    saveState();
+    renderCart(true);
+  });
   document.getElementById('tabBtnMesas').addEventListener('click', ()=> switchTab('mesas'));
   document.getElementById('tabBtnResumen').addEventListener('click', ()=> switchTab('resumen'));
   document.getElementById('methodRow').addEventListener('click', (e)=>{
@@ -569,11 +590,16 @@
     return state.sesionActual.pedidosAbiertos.find(p => p.id === pedidoActivoId) || null;
   }
   function pedidoSubtotal(p){ return p.items.reduce((s,i)=> s + i.price*i.qty, 0); }
-  function pedidoTotalConDescuento(p){
+  function pedidoDesglose(p){
     const sub = pedidoSubtotal(p);
     const pct = p.descuentoPct || 0;
-    return sub - (sub * pct / 100);
+    const descuentoMonto = sub * pct / 100;
+    const base = sub - descuentoMonto;
+    const propinaPct = p.propinaPct || 0;
+    const propinaMonto = Math.round(base * propinaPct / 100);
+    return { sub, pct, descuentoMonto, base, propinaPct, propinaMonto, total: base + propinaMonto };
   }
+  function pedidoTotalConDescuento(p){ return pedidoDesglose(p).total; }
 
   // ---------------- ACORDEON MENU ----------------
   function renderAccordion(){
@@ -670,10 +696,19 @@
       document.getElementById('descuentoInput').value = p.descuentoPct || '';
     }
 
-    const sub = pedidoSubtotal(p);
-    const pct = p.descuentoPct || 0;
-    const descuentoMonto = sub * pct / 100;
-    const total = sub - descuentoMonto;
+    const d = pedidoDesglose(p);
+    const sub = d.sub, pct = d.pct, descuentoMonto = d.descuentoMonto, total = d.total;
+
+    document.querySelectorAll('#propinaRow .method-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.propina,10) === d.propinaPct);
+    });
+    const propinaLine = document.getElementById('propinaLine');
+    if(d.propinaPct > 0){
+      propinaLine.style.display = 'flex';
+      document.getElementById('propinaValue').textContent = '+' + fmt(d.propinaMonto) + ` (${d.propinaPct}%)`;
+    } else {
+      propinaLine.style.display = 'none';
+    }
 
     const subtotalLine = document.getElementById('subtotalLine');
     const descuentoLine = document.getElementById('descuentoLine');
@@ -708,10 +743,8 @@
   function cobrarPedido(){
     const p = pedidoActivo();
     if(!p || p.items.length === 0) return;
-    const sub = pedidoSubtotal(p);
-    const pct = p.descuentoPct || 0;
-    const descuentoMonto = sub * pct / 100;
-    const total = sub - descuentoMonto;
+    const d = pedidoDesglose(p);
+    const sub = d.sub, pct = d.pct, descuentoMonto = d.descuentoMonto, total = d.total;
     state.sesionActual.ventas.push({
       id: Date.now(),
       label: p.label,
@@ -719,6 +752,8 @@
       subtotal: sub,
       descuentoPct: pct,
       descuentoMonto: descuentoMonto,
+      propinaPct: d.propinaPct,
+      propinaMonto: d.propinaMonto,
       total: total,
       metodo: metodoActual,
       hora: new Date().toISOString()
@@ -765,6 +800,10 @@
     ventas.forEach(v => { porMetodo[v.metodo] = (porMetodo[v.metodo]||0) + v.total; });
     const total = ventas.reduce((s,v) => s + v.total, 0);
     return { porMetodo, total };
+  }
+
+  function propinaDe(ventas){
+    return (ventas||[]).reduce((s,v) => s + (v.propinaMonto || 0), 0);
   }
 
   function productosVendidos(ventas){
@@ -882,15 +921,18 @@
       wrap.innerHTML = '<div class="empty">Sin ventas registradas este mes</div>';
       return;
     }
-    const porDia = {};
+    const porDia = {}, propDia = {};
     cierresDelMes.forEach(c => {
       const dia = new Date(c.horaCierre).toLocaleDateString('es-CO', {day:'2-digit', month:'short'});
       porDia[dia] = (porDia[dia]||0) + c.totalVentas;
+      propDia[dia] = (propDia[dia]||0) + propinaDe(c.ventas);
     });
     const dias = Object.keys(porDia);
     const totalMes = dias.reduce((s,d)=> s + porDia[d], 0);
-    wrap.innerHTML = dias.map(d => `<div class="month-row"><div class="d">${d}</div><div class="v">${fmt(porDia[d])}</div></div>`).join('')
-      + `<div class="month-total"><div class="label">Total del mes</div><div class="value">${fmt(totalMes)}</div></div>`;
+    const propMes = dias.reduce((s,d)=> s + propDia[d], 0);
+    wrap.innerHTML = dias.map(d => `<div class="month-row"><div class="d">${d}</div><div class="v">${fmt(porDia[d])}${propDia[d] ? `<div style="font-size:0.68rem; color:var(--terracotta-dark); font-weight:600;">propina ${fmt(propDia[d])}</div>` : ''}</div></div>`).join('')
+      + `<div class="month-total"><div class="label">Total del mes</div><div class="value">${fmt(totalMes)}</div></div>`
+      + `<div class="month-total" style="margin-top:6px;"><div class="label">Propinas del mes</div><div class="value">${fmt(propMes)}</div></div>`;
   }
 
   // ---------- RENDER ----------
@@ -924,6 +966,7 @@
     document.getElementById('viewTotalVentas').textContent = fmt(total);
     document.getElementById('viewEfectivoEsperado').textContent = fmt(efectivoEsperado);
     document.getElementById('viewNumVentas').textContent = state.sesionActual.ventas.length;
+    document.getElementById('viewPropinas').textContent = fmt(propinaDe(state.sesionActual.ventas));
 
     const list = document.getElementById('ventasList');
     const ventas = state.sesionActual.ventas;
@@ -948,7 +991,7 @@
               <button class="del" onclick="eliminarVentaTicket(${v.id})">✕</button>
             </div>
           </div>
-          <div class="items">${v.items.map(i=>`${i.qty}× ${escapeHtml(i.name)}`).join(' · ')}${v.descuentoPct ? ` · <span style="color:var(--terracotta-dark);">-${v.descuentoPct}% desc.</span>` : ''}</div>
+          <div class="items">${v.items.map(i=>`${i.qty}× ${escapeHtml(i.name)}`).join(' · ')}${v.descuentoPct ? ` · <span style="color:var(--terracotta-dark);">-${v.descuentoPct}% desc.</span>` : ''}${v.propinaMonto ? ` · <span style="color:var(--terracotta-dark);">+${v.propinaPct}% propina (${fmt(v.propinaMonto)})</span>` : ''}</div>
         </div>
       `).join('');
       list.querySelectorAll('.metodo-edit').forEach(sel=>{
@@ -980,6 +1023,7 @@
           <div class="history-entry">
             <div class="date">${new Date(c.horaCierre).toLocaleDateString('es-CO',{dateStyle:'long'})}</div>
             <div>Responsable: ${escapeHtml(c.responsable)} · ${c.ventas.length} ventas</div>
+            ${propinaDe(c.ventas) ? `<div>Propinas del día: <b>${fmt(propinaDe(c.ventas))}</b> <span style="color:var(--ink-soft);">(incluidas en el total)</span></div>` : ''}
             <div>Total: ${fmt(c.totalVentas)} — Efectivo: ${fmt(c.porMetodo.efectivo)} · Tarjeta: ${fmt(c.porMetodo.tarjeta)} · Transf.: ${fmt(c.porMetodo.transferencia)}</div>
             ${diffHtml}
             ${c.notas ? `<div style="color:var(--ink-soft); font-size:0.72rem; margin-top:2px;">Nota: ${escapeHtml(c.notas)}</div>` : ''}
