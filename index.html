@@ -309,6 +309,7 @@
                     <div class="value" id="vueltoValue">$0</div>
                   </div>
                 </div>
+                <button class="btn-ghost" id="btnImprimir" style="margin-bottom:10px;">🖨 Imprimir cuenta</button>
                 <button class="btn-primary" id="btnCobrar">Cobrar y cerrar mesa</button>
                 <button class="btn-danger" id="btnCancelarPedido" style="margin-top:10px;">Cancelar pedido</button>
               </div>
@@ -468,6 +469,13 @@
   document.getElementById('btnAbrir').addEventListener('click', abrirCaja);
   document.getElementById('btnAgregarOtro').addEventListener('click', agregarOtro);
   document.getElementById('btnCobrar').addEventListener('click', cobrarPedido);
+  document.getElementById('btnImprimir').addEventListener('click', () => {
+    const p = pedidoActivo();
+    if(!p || p.items.length === 0){ alert('Agrega productos al pedido para imprimir la cuenta.'); return; }
+    const d = pedidoDesglose(p);
+    imprimirCuenta({ label:p.label, items:p.items, sub:d.sub, pct:d.pct, descuentoMonto:d.descuentoMonto,
+      base:d.base, propinaPct:d.propinaPct, propinaMonto:d.propinaMonto, fecha:new Date() });
+  });
   document.getElementById('btnCancelarPedido').addEventListener('click', cancelarPedido);
   document.getElementById('btnCerrar').addEventListener('click', cerrarCaja);
   document.getElementById('btnExport').addEventListener('click', exportarHistorial);
@@ -802,6 +810,75 @@
     return { porMetodo, total };
   }
 
+  // ---------- IMPRIMIR CUENTA ----------
+  function imprimirCuenta(c){
+    // Si no hay propina elegida, se muestra la sugerida del 10%
+    const sugerida = !c.propinaPct;
+    const pPct = sugerida ? 10 : c.propinaPct;
+    const pMonto = sugerida ? Math.round(c.base * 0.10) : c.propinaMonto;
+    const fechaTxt = c.fecha.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'})
+      + ' ' + c.fecha.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const filas = c.items.map(i => `
+      <tr><td class="q">${i.qty}×</td><td>${escapeHtml(i.name)}<div class="u">${fmt(i.price)} c/u</div></td><td class="r">${fmt(i.price*i.qty)}</td></tr>`).join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Cuenta LUA</title>
+<style>
+  @page{ size:80mm auto; margin:4mm; }
+  *{ box-sizing:border-box; }
+  body{ font-family:'Courier New',monospace; font-size:12px; color:#000; margin:0; width:72mm; }
+  h1{ font-size:16px; text-align:center; margin:0 0 2px; letter-spacing:.5px; }
+  .c{ text-align:center; }
+  .tel{ text-align:center; margin-bottom:6px; }
+  hr{ border:none; border-top:1px dashed #000; margin:6px 0; }
+  table{ width:100%; border-collapse:collapse; }
+  td{ vertical-align:top; padding:2px 0; }
+  td.q{ width:9mm; } td.r{ text-align:right; white-space:nowrap; padding-left:4px; }
+  .u{ font-size:10px; color:#333; }
+  .tot td{ padding:1px 0; }
+  .big td{ font-weight:bold; font-size:14px; padding-top:3px; }
+  .pie{ text-align:center; margin-top:10px; font-size:12px; }
+  .nota{ text-align:center; font-size:10px; margin-top:4px; }
+</style></head><body>
+  <h1>LUA coffee&amp;roasters</h1>
+  <div class="tel">Contacto: 3127795285</div>
+  <hr>
+  <div>${escapeHtml(c.label || '')}</div>
+  <div>${fechaTxt}</div>
+  <hr>
+  <table>${filas}</table>
+  <hr>
+  <table class="tot">
+    ${c.pct ? `<tr><td>Subtotal</td><td class="r">${fmt(c.sub)}</td></tr>
+    <tr><td>Descuento (${c.pct}%)</td><td class="r">-${fmt(c.descuentoMonto)}</td></tr>` : ''}
+    <tr class="big"><td>TOTAL</td><td class="r">${fmt(c.base)}</td></tr>
+    <tr><td>Propina ${sugerida ? 'sugerida ' : ''}(${pPct}%)</td><td class="r">${fmt(pMonto)}</td></tr>
+    <tr class="big"><td>TOTAL CON PROPINA</td><td class="r">${fmt(c.base + pMonto)}</td></tr>
+  </table>
+  ${sugerida ? '<div class="nota">La propina es voluntaria.</div>' : ''}
+  <hr>
+  <div class="pie">¡Gracias por venir a<br>LUA coffee&amp;roasters!</div>
+</body></html>`;
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0;';
+    document.body.appendChild(frame);
+    const doc = frame.contentWindow.document;
+    doc.open(); doc.write(html); doc.close();
+    setTimeout(() => {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      setTimeout(() => frame.remove(), 2000);
+    }, 300);
+  }
+
+  function imprimirVenta(id){
+    const v = state.sesionActual && state.sesionActual.ventas.find(x => x.id === id);
+    if(!v) return;
+    const propinaMonto = v.propinaMonto || 0;
+    imprimirCuenta({ label:v.label, items:v.items, sub:v.subtotal, pct:v.descuentoPct || 0,
+      descuentoMonto:v.descuentoMonto || 0, base:v.total - propinaMonto,
+      propinaPct:v.propinaPct || 0, propinaMonto, fecha:new Date(v.hora) });
+  }
+  window.imprimirVenta = imprimirVenta;
+
   function propinaDe(ventas){
     return (ventas||[]).reduce((s,v) => s + (v.propinaMonto || 0), 0);
   }
@@ -988,6 +1065,7 @@
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
               <div class="mono" style="font-weight:700;">${fmt(v.total)}</div>
+              <button class="del" title="Imprimir cuenta" onclick="imprimirVenta(${v.id})">🖨</button>
               <button class="del" onclick="eliminarVentaTicket(${v.id})">✕</button>
             </div>
           </div>
